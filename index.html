@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OMDB Movie Search</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎬 Movie Search</h1>
+            <p class="subtitle">Find your favorite movies</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="search-box">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search for a movie..."
+                        class="search-input"
+                    >
+                    <button id="searchBtn" class="search-btn">Search</button>
+                </div>
+                <div id="errorMessage" class="error-message"></div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="loading-spinner hidden">
+                <div class="spinner"></div>
+                <p>Searching movies...</p>
+            </div>
+
+            <!-- Movie Details Section -->
+            <div id="movieContainer" class="movie-container hidden">
+                <button id="backBtn" class="back-btn">← Back to Search</button>
+                <div class="movie-details">
+                    <img id="moviePoster" class="movie-poster" alt="Movie Poster">
+                    <div class="movie-info">
+                        <h2 id="movieTitle"></h2>
+                        <div class="movie-meta">
+                            <span class="meta-item">
+                                <strong>Year:</strong> <span id="movieYear"></span>
+                            </span>
+                            <span class="meta-item">
+                                <strong>Type:</strong> <span id="movieType"></span>
+                            </span>
+                        </div>
+                        <div class="movie-meta">
+                            <span class="meta-item">
+                                <strong>Genre:</strong> <span id="movieGenre"></span>
+                            </span>
+                            <span class="meta-item">
+                                <strong>Director:</strong> <span id="movieDirector"></span>
+                            </span>
+                        </div>
+                        <div class="movie-meta">
+                            <span class="meta-item">
+                                <strong>Actors:</strong> <span id="movieActors"></span>
+                            </span>
+                        </div>
+                        <div class="movie-meta">
+                            <span class="meta-item">
+                                <strong>Runtime:</strong> <span id="movieRuntime"></span>
+                            </span>
+                            <span class="meta-item">
+                                <strong>IMDb Rating:</strong> <span id="movieRating">-</span>
+                            </span>
+                        </div>
+                        <div class="movie-plot">
+                            <h3>Plot</h3>
+                            <p id="moviePlot"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Results Section -->
+            <div id="searchResults" class="search-results hidden">
+                <button id="backBtn2" class="back-btn">← Back to Search</button>
+                <h2>Search Results</h2>
+                <div id="resultsList" class="results-list"></div>
+            </div>
+
+            <!-- Welcome Section -->
+            <div id="welcomeSection" class="welcome-section">
+                <div class="welcome-content">
+                    <h2>Welcome to Movie Search</h2>
+                    <p>Search for any movie and get detailed information including:</p>
+                    <ul>
+                        <li>Movie Title and Release Year</li>
+                        <li>Genre and Director</li>
+                        <li>Cast and Plot Summary</li>
+                        <li>IMDb Rating and Runtime</li>
+                    </ul>
+                    <p class="hint">Start by typing a movie name in the search box above</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Data provided by <a href="http://www.omdbapi.com/" target="_blank">OMDB API</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
