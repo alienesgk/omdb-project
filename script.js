@@ -1,11 +1,10 @@
 // OMDB Movie Search Application
-// API Key: Get your free key from http://www.omdbapi.com/
 
 class MovieSearch {
     constructor() {
         // Configuration
         this.OMDB_API_URL = 'https://www.omdbapi.com/';
-        this.API_KEY = 'YOUR_API_KEY_HERE'; // Replace with actual API key from omdbapi.com
+        this.API_KEY = '17b22614'; 
 
         // DOM Elements
         this.searchInput = document.getElementById('searchInput');
