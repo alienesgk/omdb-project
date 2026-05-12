@@ -223,19 +223,17 @@ class MovieSearchPro {
     }
 
     async search() {
-        const query = this.searchInput.value.trim();
-
-        if (!query) {
-            this.showError('Please enter a movie name');
-            return;
-        }
+        const inputQuery = this.searchInput.value.trim();
+        // OMDB API requires a search term. If empty, use a broad default term to allow filtering.
+        const apiQuery = inputQuery || "the";
 
         try {
             this.clearError();
             this.showLoading(true);
 
+            // Removed hardcoded &type=movie so local type filters can work
             const response = await fetch(
-                `${this.OMDB_API_URL}?apikey=${this.API_KEY}&s=${encodeURIComponent(query)}&type=movie`
+                `${this.OMDB_API_URL}?apikey=${this.API_KEY}&s=${encodeURIComponent(apiQuery)}`
             );
 
             const data = await response.json();
@@ -250,10 +248,12 @@ class MovieSearchPro {
                     this.filterAndSortResults();
                 }
 
-                this.saveSearch(query);
-                this.renderHistory();
+                if (inputQuery) {
+                    this.saveSearch(inputQuery);
+                    this.renderHistory();
+                }
             } else {
-                this.showError(`No movies found for "${query}". Try a different search.`);
+                this.showError(`No results found. Try a different search or adjust filters.`);
             }
         } catch (error) {
             console.error('Search error:', error);
@@ -278,26 +278,29 @@ class MovieSearchPro {
             return year >= this.currentFilters.yearFrom && year <= this.currentFilters.yearTo;
         });
 
-        if (this.currentFilters.sort === 'rating') {
-            for (let movie of filtered) {
-                if (!movie.imdbRating) {
-                    try {
-                        const response = await fetch(
-                            `${this.OMDB_API_URL}?apikey=${this.API_KEY}&i=${movie.imdbID}`
-                        );
-                        const data = await response.json();
-                        movie.imdbRating = data.imdbRating !== 'N/A' ? parseFloat(data.imdbRating) : 0;
-                    } catch (e) {
-                        movie.imdbRating = 0;
-                    }
+        // Always fetch IMDB ratings if they haven't been fetched yet
+        const moviesToFetch = filtered.filter(movie => movie.imdbRating === undefined);
+        
+        if (moviesToFetch.length > 0) {
+            // We use Promise.all to fetch ratings concurrently for better performance
+            await Promise.all(moviesToFetch.map(async movie => {
+                try {
+                    const response = await fetch(
+                        `${this.OMDB_API_URL}?apikey=${this.API_KEY}&i=${movie.imdbID}`
+                    );
+                    const data = await response.json();
+                    movie.imdbRating = data.imdbRating && data.imdbRating !== 'N/A' ? parseFloat(data.imdbRating) : 0;
+                } catch (e) {
+                    movie.imdbRating = 0;
                 }
-            }
-
-            filtered = filtered.filter(movie => {
-                const rating = movie.imdbRating || 0;
-                return rating >= this.currentFilters.ratingFrom && rating <= this.currentFilters.ratingTo;
-            });
+            }));
         }
+
+        // Apply IMDB rating filter
+        filtered = filtered.filter(movie => {
+            const rating = movie.imdbRating || 0;
+            return rating >= this.currentFilters.ratingFrom && rating <= this.currentFilters.ratingTo;
+        });
 
         filtered = this.sortResults(filtered);
         this.filteredMovies = filtered;
