@@ -14,21 +14,20 @@
         </header>
 
         <main class="main-content">
-            <!-- Advanced Search Section -->
+            <!-- Search Section -->
             <div class="search-section">
-                <!-- Main Search Box -->
                 <div class="search-box">
                     <input
                         type="text"
                         id="searchInput"
-                        placeholder="Search for a movie..."
+                        placeholder="Search for a movie... (optional)"
                         class="search-input"
                         autocomplete="off"
                     >
                     <button id="searchBtn" class="search-btn">Search</button>
                 </div>
 
-                <!-- Search History Dropdown -->
+                <!-- Search History -->
                 <div class="search-history">
                     <button id="historyBtn" class="history-btn" title="View search history">
                         📋 Recent
@@ -39,36 +38,39 @@
                     </div>
                 </div>
 
-                <!-- Advanced Filters Panel -->
-                <div class="filters-panel">
-                    <button id="toggleFiltersBtn" class="toggle-filters-btn">
-                        ⚙️ Filters
-                    </button>
+                <!-- Error Message -->
+                <div id="errorMessage" class="error-message"></div>
+            </div>
 
-                    <div id="filtersContainer" class="filters-container hidden">
-                        <!-- Year Filter -->
+            <!-- Filters Panel -->
+            <div class="filters-section">
+                <button id="toggleFiltersBtn" class="toggle-filters-btn">
+                    ⚙️ Filters
+                </button>
+
+                <div id="filtersContainer" class="filters-container hidden">
+                    <div class="filters-grid">
+                        <!-- Year Range Filter -->
                         <div class="filter-group">
                             <label>📅 Year Range:</label>
                             <div class="year-filter-container">
-                                <input
-                                    type="range"
-                                    id="yearFrom"
-                                    min="1900"
-                                    max="2026"
-                                    value="1900"
-                                    class="year-slider"
-                                >
+                                <input type="range" id="yearFrom" min="1900" max="2026" value="1900" class="year-slider">
                                 <span id="yearFromLabel">1900</span>
                                 <span class="separator">-</span>
-                                <input
-                                    type="range"
-                                    id="yearTo"
-                                    min="1900"
-                                    max="2026"
-                                    value="2026"
-                                    class="year-slider"
-                                >
+                                <input type="range" id="yearTo" min="1900" max="2026" value="2026" class="year-slider">
                                 <span id="yearToLabel">2026</span>
+                            </div>
+                        </div>
+
+                        <!-- IMDB Rating Filter -->
+                        <div class="filter-group">
+                            <label>⭐ IMDB Rating:</label>
+                            <div class="rating-filter-container">
+                                <input type="range" id="ratingFrom" min="0" max="10" step="0.1" value="0" class="rating-slider">
+                                <span id="ratingFromLabel">0.0</span>
+                                <span class="separator">-</span>
+                                <input type="range" id="ratingTo" min="0" max="10" step="0.1" value="10" class="rating-slider">
+                                <span id="ratingToLabel">10.0</span>
                             </div>
                         </div>
 
@@ -92,25 +94,20 @@
                                     <option value="year-new">Year (Newest First)</option>
                                     <option value="year-old">Year (Oldest First)</option>
                                     <option value="title">Title (A-Z)</option>
+                                    <option value="rating">Rating (Highest First)</option>
                                 </select>
                             </div>
                         </div>
-
-                        <!-- Reset Filters Button -->
-                        <button id="resetFiltersBtn" class="reset-filters-btn">
-                            ↻ Reset Filters
-                        </button>
                     </div>
-                </div>
 
-                <!-- Error Message -->
-                <div id="errorMessage" class="error-message"></div>
+                    <button id="resetFiltersBtn" class="reset-filters-btn">↻ Reset Filters</button>
+                </div>
             </div>
 
             <!-- Loading Spinner -->
             <div id="loadingSpinner" class="loading-spinner hidden">
                 <div class="spinner"></div>
-                <p>Searching movies...</p>
+                <p>Loading movies...</p>
             </div>
 
             <!-- Movie Details Section -->
@@ -121,33 +118,19 @@
                     <div class="movie-info">
                         <h2 id="movieTitle"></h2>
                         <div class="movie-meta">
-                            <span class="meta-item">
-                                <strong>Year:</strong> <span id="movieYear"></span>
-                            </span>
-                            <span class="meta-item">
-                                <strong>Type:</strong> <span id="movieType"></span>
-                            </span>
+                            <span class="meta-item"><strong>Year:</strong> <span id="movieYear"></span></span>
+                            <span class="meta-item"><strong>Type:</strong> <span id="movieType"></span></span>
                         </div>
                         <div class="movie-meta">
-                            <span class="meta-item">
-                                <strong>Genre:</strong> <span id="movieGenre"></span>
-                            </span>
-                            <span class="meta-item">
-                                <strong>Director:</strong> <span id="movieDirector"></span>
-                            </span>
+                            <span class="meta-item"><strong>Genre:</strong> <span id="movieGenre"></span></span>
+                            <span class="meta-item"><strong>Director:</strong> <span id="movieDirector"></span></span>
                         </div>
                         <div class="movie-meta">
-                            <span class="meta-item">
-                                <strong>Actors:</strong> <span id="movieActors"></span>
-                            </span>
+                            <span class="meta-item"><strong>Actors:</strong> <span id="movieActors"></span></span>
                         </div>
                         <div class="movie-meta">
-                            <span class="meta-item">
-                                <strong>Runtime:</strong> <span id="movieRuntime"></span>
-                            </span>
-                            <span class="meta-item">
-                                <strong>IMDb Rating:</strong> <span id="movieRating">-</span>
-                            </span>
+                            <span class="meta-item"><strong>Runtime:</strong> <span id="movieRuntime"></span></span>
+                            <span class="meta-item"><strong>IMDb Rating:</strong> <span id="movieRating">-</span></span>
                         </div>
                         <div class="movie-plot">
                             <h3>Plot</h3>
@@ -165,6 +148,13 @@
                     <span id="resultsCount" class="results-count"></span>
                 </div>
                 <div id="resultsList" class="results-list"></div>
+
+                <!-- Pagination -->
+                <div id="pagination" class="pagination hidden">
+                    <button id="prevPage" class="page-btn">← Previous</button>
+                    <div id="pageInfo" class="page-info"></div>
+                    <button id="nextPage" class="page-btn">Next →</button>
+                </div>
             </div>
 
             <!-- Welcome Section -->
@@ -181,15 +171,17 @@
                     <div class="features">
                         <h3>✨ Advanced Features:</h3>
                         <ul>
-                            <li>🔍 <strong>Smart Search</strong> - Find movies by title</li>
+                            <li>🔍 <strong>Smart Search</strong> - Find movies by title (optional)</li>
                             <li>📅 <strong>Year Filters</strong> - Filter by release year range</li>
+                            <li>⭐ <strong>Rating Filters</strong> - Filter by IMDB rating range</li>
                             <li>🎞️ <strong>Type Filters</strong> - Movie, TV Series, Episodes</li>
-                            <li>🔄 <strong>Smart Sorting</strong> - Sort by relevance, year, title</li>
+                            <li>🔄 <strong>Smart Sorting</strong> - Sort by relevance, year, rating, title</li>
                             <li>📋 <strong>Search History</strong> - Quick access to recent searches</li>
+                            <li>📄 <strong>Pagination</strong> - 24 movies per page</li>
                             <li>📱 <strong>Responsive Design</strong> - Works on all devices</li>
                         </ul>
                     </div>
-                    <p class="hint">👉 Start by typing a movie name and use filters to narrow results</p>
+                    <p class="hint">👉 Use filters to browse all movies or type a name to search</p>
                 </div>
             </div>
         </main>
