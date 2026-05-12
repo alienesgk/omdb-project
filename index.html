@@ -3,28 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OMDB Movie Search</title>
+    <title>OMDB Movie Search - Advanced</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header class="header">
-            <h1>🎬 Movie Search</h1>
-            <p class="subtitle">Find your favorite movies</p>
+            <h1>🎬 Movie Search Pro</h1>
+            <p class="subtitle">Find and filter your favorite movies</p>
         </header>
 
         <main class="main-content">
-            <!-- Search Section -->
+            <!-- Advanced Search Section -->
             <div class="search-section">
+                <!-- Main Search Box -->
                 <div class="search-box">
                     <input
                         type="text"
                         id="searchInput"
                         placeholder="Search for a movie..."
                         class="search-input"
+                        autocomplete="off"
                     >
                     <button id="searchBtn" class="search-btn">Search</button>
                 </div>
+
+                <!-- Search History Dropdown -->
+                <div class="search-history">
+                    <button id="historyBtn" class="history-btn" title="View search history">
+                        📋 Recent
+                    </button>
+                    <div id="historyDropdown" class="history-dropdown hidden">
+                        <ul id="historyList"></ul>
+                        <button id="clearHistoryBtn" class="clear-history-btn">Clear History</button>
+                    </div>
+                </div>
+
+                <!-- Advanced Filters Panel -->
+                <div class="filters-panel">
+                    <button id="toggleFiltersBtn" class="toggle-filters-btn">
+                        ⚙️ Filters
+                    </button>
+
+                    <div id="filtersContainer" class="filters-container hidden">
+                        <!-- Year Filter -->
+                        <div class="filter-group">
+                            <label for="yearFilter">📅 Year Range:</label>
+                            <div class="year-filter-container">
+                                <input
+                                    type="range"
+                                    id="yearFrom"
+                                    min="1900"
+                                    max="2026"
+                                    value="1900"
+                                    class="year-slider"
+                                >
+                                <span id="yearFromLabel">1900</span>
+                                <span class="separator">-</span>
+                                <input
+                                    type="range"
+                                    id="yearTo"
+                                    min="1900"
+                                    max="2026"
+                                    value="2026"
+                                    class="year-slider"
+                                >
+                                <span id="yearToLabel">2026</span>
+                            </div>
+                        </div>
+
+                        <!-- Type Filter -->
+                        <div class="filter-group">
+                            <label for="typeFilter">🎞️ Type:</label>
+                            <div class="type-filter-container">
+                                <button class="type-btn active" data-type="all">All</button>
+                                <button class="type-btn" data-type="movie">Movie</button>
+                                <button class="type-btn" data-type="series">TV Series</button>
+                                <button class="type-btn" data-type="episode">Episode</button>
+                            </div>
+                        </div>
+
+                        <!-- Sort Filter -->
+                        <div class="filter-group">
+                            <label for="sortFilter">🔄 Sort By:</label>
+                            <div class="sort-filter-container">
+                                <select id="sortFilter" class="sort-select">
+                                    <option value="relevance">Relevance</option>
+                                    <option value="year-new">Year (Newest First)</option>
+                                    <option value="year-old">Year (Oldest First)</option>
+                                    <option value="rating">IMDb Rating</option>
+                                    <option value="title">Title (A-Z)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Reset Filters Button -->
+                        <button id="resetFiltersBtn" class="reset-filters-btn">
+                            ↻ Reset Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
                 <div id="errorMessage" class="error-message"></div>
             </div>
 
@@ -81,14 +161,17 @@
             <!-- Search Results Section -->
             <div id="searchResults" class="search-results hidden">
                 <button id="backBtn2" class="back-btn">← Back to Search</button>
-                <h2>Search Results</h2>
+                <div class="results-header">
+                    <h2>Search Results</h2>
+                    <span id="resultsCount" class="results-count"></span>
+                </div>
                 <div id="resultsList" class="results-list"></div>
             </div>
 
             <!-- Welcome Section -->
             <div id="welcomeSection" class="welcome-section">
                 <div class="welcome-content">
-                    <h2>Welcome to Movie Search</h2>
+                    <h2>Welcome to Movie Search Pro</h2>
                     <p>Search for any movie and get detailed information including:</p>
                     <ul>
                         <li>Movie Title and Release Year</li>
@@ -96,13 +179,24 @@
                         <li>Cast and Plot Summary</li>
                         <li>IMDb Rating and Runtime</li>
                     </ul>
-                    <p class="hint">Start by typing a movie name in the search box above</p>
+                    <div class="features">
+                        <h3>✨ Advanced Features:</h3>
+                        <ul>
+                            <li>🔍 <strong>Smart Search</strong> - Find movies by title</li>
+                            <li>📅 <strong>Year Filters</strong> - Filter by release year range</li>
+                            <li>🎞️ <strong>Type Filters</strong> - Movie, TV Series, Episodes</li>
+                            <li>🔄 <strong>Smart Sorting</strong> - Sort by relevance, year, rating</li>
+                            <li>📋 <strong>Search History</strong> - Quick access to recent searches</li>
+                            <li>📱 <strong>Responsive Design</strong> - Works on all devices</li>
+                        </ul>
+                    </div>
+                    <p class="hint">👉 Start by typing a movie name and use filters to narrow results</p>
                 </div>
             </div>
         </main>
 
         <footer class="footer">
-            <p>Data provided by <a href="http://www.omdbapi.com/" target="_blank">OMDB API</a></p>
+            <p>Data provided by <a href="http://www.omdbapi.com/" target="_blank">OMDB API</a> | Built with ❤️ for better movie discovery</p>
         </footer>
     </div>
 
