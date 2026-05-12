@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OMDB Movie Search - Advanced</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -53,24 +54,30 @@
                         <!-- Year Range Filter -->
                         <div class="filter-group">
                             <label>📅 Year Range:</label>
-                            <div class="year-filter-container">
-                                <input type="range" id="yearFrom" min="1900" max="2026" value="1900" class="year-slider">
-                                <span id="yearFromLabel">1900</span>
-                                <span class="separator">-</span>
-                                <input type="range" id="yearTo" min="1900" max="2026" value="2026" class="year-slider">
-                                <span id="yearToLabel">2026</span>
+                            <div class="range-filter-container">
+                                <div class="range-wrapper">
+                                    <span class="range-label">Min: <span id="yearFromLabel">1900</span></span>
+                                    <input type="range" id="yearFrom" min="1900" max="2026" value="1900" class="slider">
+                                </div>
+                                <div class="range-wrapper">
+                                    <span class="range-label">Max: <span id="yearToLabel">2026</span></span>
+                                    <input type="range" id="yearTo" min="1900" max="2026" value="2026" class="slider">
+                                </div>
                             </div>
                         </div>
 
                         <!-- IMDB Rating Filter -->
                         <div class="filter-group">
                             <label>⭐ IMDB Rating:</label>
-                            <div class="rating-filter-container">
-                                <input type="range" id="ratingFrom" min="0" max="10" step="0.1" value="0" class="rating-slider">
-                                <span id="ratingFromLabel">0.0</span>
-                                <span class="separator">-</span>
-                                <input type="range" id="ratingTo" min="0" max="10" step="0.1" value="10" class="rating-slider">
-                                <span id="ratingToLabel">10.0</span>
+                            <div class="range-filter-container">
+                                <div class="range-wrapper">
+                                    <span class="range-label">Min: <span id="ratingFromLabel">0.0</span></span>
+                                    <input type="range" id="ratingFrom" min="0" max="10" step="0.1" value="0" class="slider">
+                                </div>
+                                <div class="range-wrapper">
+                                    <span class="range-label">Max: <span id="ratingToLabel">10.0</span></span>
+                                    <input type="range" id="ratingTo" min="0" max="10" step="0.1" value="10" class="slider">
+                                </div>
                             </div>
                         </div>
 
