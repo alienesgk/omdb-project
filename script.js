@@ -80,34 +80,56 @@ class MovieSearchPro {
 
         // Filters
         this.toggleFiltersBtn.addEventListener('click', () => this.toggleFilters());
-        this.yearFrom.addEventListener('input', () => this.updateYearLabels());
-        this.yearTo.addEventListener('input', () => this.updateYearLabels());
-        this.typeBtns.forEach(btn => {
-            btn.addEventListener('click', () => this.setTypeFilter(btn));
+
+        this.yearFrom.addEventListener('input', () => {
+            this.updateYearLabels();
+            if (this.allSearchResults.length > 0) {
+                this.filterAndSortResults();
+            }
         });
+
+        this.yearTo.addEventListener('input', () => {
+            this.updateYearLabels();
+            if (this.allSearchResults.length > 0) {
+                this.filterAndSortResults();
+            }
+        });
+
+        this.typeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.setTypeFilter(btn);
+                if (this.allSearchResults.length > 0) {
+                    this.filterAndSortResults();
+                }
+            });
+        });
+
         this.sortFilter.addEventListener('change', () => this.applySorting());
         this.resetFiltersBtn.addEventListener('click', () => this.resetFilters());
 
         // Search History
-        this.historyBtn.addEventListener('click', () => this.toggleHistory());
+        this.historyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleHistory();
+        });
+
         this.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
 
         // Close history when clicking outside
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-history')) {
+            if (!e.target.closest('.search-history') && !e.target.closest('.history-dropdown')) {
                 this.historyDropdown.classList.add('hidden');
             }
         });
 
         // Close filters when clicking outside
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.filters-panel')) {
+            if (!e.target.closest('.filters-panel') && !e.target.closest('.toggle-filters-btn')) {
                 this.filtersContainer.classList.add('hidden');
             }
         });
 
-        // Load last search
-        this.loadLastSearch();
+        // Load and render history on page load
         this.renderHistory();
     }
 
@@ -238,7 +260,7 @@ class MovieSearchPro {
                 sorted.sort((a, b) => a.Title.localeCompare(b.Title));
                 break;
             case 'rating':
-                // Note: search results don't include ratings, so this would need full details
+                // Note: search results don't include ratings
                 // For now, we'll keep relevance order
                 break;
             case 'relevance':
@@ -298,6 +320,16 @@ class MovieSearchPro {
         this.resultsList.innerHTML = '';
         this.resultsCount.textContent = `${movies.length} result${movies.length !== 1 ? 's' : ''}`;
 
+        if (movies.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.style.padding = '40px';
+            emptyMsg.style.textAlign = 'center';
+            emptyMsg.style.color = '#666';
+            emptyMsg.textContent = 'No movies match your filters';
+            this.resultsList.appendChild(emptyMsg);
+            return;
+        }
+
         movies.forEach(movie => {
             const card = document.createElement('div');
             card.className = 'result-card';
@@ -352,7 +384,7 @@ class MovieSearchPro {
         this.errorMessage.classList.remove('show');
     }
 
-    // Search History
+    // Search History Methods
     saveSearch(query) {
         try {
             let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
@@ -362,17 +394,6 @@ class MovieSearchPro {
             localStorage.setItem('searchHistory', JSON.stringify(history));
         } catch (e) {
             console.warn('Could not save search to localStorage:', e);
-        }
-    }
-
-    loadLastSearch() {
-        try {
-            const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-            if (history.length > 0) {
-                this.searchInput.value = history[0];
-            }
-        } catch (e) {
-            console.warn('Could not load last search:', e);
         }
     }
 
@@ -398,10 +419,17 @@ class MovieSearchPro {
             history.forEach(query => {
                 const li = document.createElement('li');
                 li.textContent = query;
+                li.style.cursor = 'pointer';
                 li.addEventListener('click', () => {
                     this.searchInput.value = query;
                     this.historyDropdown.classList.add('hidden');
                     this.search();
+                });
+                li.addEventListener('mouseover', () => {
+                    li.style.backgroundColor = '#f0f0f0';
+                });
+                li.addEventListener('mouseout', () => {
+                    li.style.backgroundColor = 'transparent';
                 });
                 this.historyList.appendChild(li);
             });
