@@ -1,28 +1,27 @@
-// OMDB Movie Search Pro - Advanced Edition
-// With filters, history, and sorting capabilities
-
 class MovieSearchPro {
     constructor() {
-        // Configuration
         this.OMDB_API_URL = 'https://www.omdbapi.com/';
         this.API_KEY = '17b22614';
+        this.ITEMS_PER_PAGE = 24;
+        this.currentPage = 1;
+        this.allMovies = [];
+        this.filteredMovies = [];
 
-        // DOM Elements - Search
+        this.initDOMElements();
+        this.init();
+    }
+
+    initDOMElements() {
         this.searchInput = document.getElementById('searchInput');
         this.searchBtn = document.getElementById('searchBtn');
         this.errorMessage = document.getElementById('errorMessage');
         this.loadingSpinner = document.getElementById('loadingSpinner');
-
-        // DOM Elements - Containers
         this.movieContainer = document.getElementById('movieContainer');
         this.searchResults = document.getElementById('searchResults');
         this.welcomeSection = document.getElementById('welcomeSection');
-
-        // Back buttons
         this.backBtn = document.getElementById('backBtn');
         this.backBtn2 = document.getElementById('backBtn2');
 
-        // Movie details
         this.movieTitle = document.getElementById('movieTitle');
         this.movieYear = document.getElementById('movieYear');
         this.movieType = document.getElementById('movieType');
@@ -36,61 +35,79 @@ class MovieSearchPro {
         this.resultsList = document.getElementById('resultsList');
         this.resultsCount = document.getElementById('resultsCount');
 
-        // Filters
         this.toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
         this.filtersContainer = document.getElementById('filtersContainer');
         this.yearFrom = document.getElementById('yearFrom');
         this.yearTo = document.getElementById('yearTo');
         this.yearFromLabel = document.getElementById('yearFromLabel');
         this.yearToLabel = document.getElementById('yearToLabel');
+        this.ratingFrom = document.getElementById('ratingFrom');
+        this.ratingTo = document.getElementById('ratingTo');
+        this.ratingFromLabel = document.getElementById('ratingFromLabel');
+        this.ratingToLabel = document.getElementById('ratingToLabel');
         this.typeBtns = document.querySelectorAll('.type-btn');
         this.sortFilter = document.getElementById('sortFilter');
         this.resetFiltersBtn = document.getElementById('resetFiltersBtn');
 
-        // Search History
         this.historyBtn = document.getElementById('historyBtn');
         this.historyDropdown = document.getElementById('historyDropdown');
         this.historyList = document.getElementById('historyList');
         this.clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
-        // Filter state
+        this.pagination = document.getElementById('pagination');
+        this.prevPage = document.getElementById('prevPage');
+        this.nextPage = document.getElementById('nextPage');
+        this.pageInfo = document.getElementById('pageInfo');
+
         this.currentFilters = {
             yearFrom: 1900,
             yearTo: 2026,
+            ratingFrom: 0,
+            ratingTo: 10,
             type: 'all',
             sort: 'relevance'
         };
-
-        this.allSearchResults = [];
-
-        // Initialize
-        this.init();
     }
 
     init() {
-        // Search events
         this.searchBtn.addEventListener('click', () => this.search());
         this.searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.search();
         });
 
-        // Back buttons
         this.backBtn.addEventListener('click', () => this.goBackToSearch());
         this.backBtn2.addEventListener('click', () => this.goBackToSearch());
 
-        // Filters
         this.toggleFiltersBtn.addEventListener('click', () => this.toggleFilters());
 
         this.yearFrom.addEventListener('input', () => {
             this.updateYearLabels();
-            if (this.allSearchResults.length > 0) {
+            if (this.allMovies.length > 0) {
+                this.currentPage = 1;
                 this.filterAndSortResults();
             }
         });
 
         this.yearTo.addEventListener('input', () => {
             this.updateYearLabels();
-            if (this.allSearchResults.length > 0) {
+            if (this.allMovies.length > 0) {
+                this.currentPage = 1;
+                this.filterAndSortResults();
+            }
+        });
+
+        this.ratingFrom.addEventListener('input', () => {
+            this.updateRatingLabels();
+            if (this.allMovies.length > 0) {
+                this.currentPage = 1;
+                this.filterAndSortResults();
+            }
+        });
+
+        this.ratingTo.addEventListener('input', () => {
+            this.updateRatingLabels();
+            if (this.allMovies.length > 0) {
+                this.currentPage = 1;
                 this.filterAndSortResults();
             }
         });
@@ -98,7 +115,8 @@ class MovieSearchPro {
         this.typeBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 this.setTypeFilter(btn);
-                if (this.allSearchResults.length > 0) {
+                if (this.allMovies.length > 0) {
+                    this.currentPage = 1;
                     this.filterAndSortResults();
                 }
             });
@@ -107,7 +125,6 @@ class MovieSearchPro {
         this.sortFilter.addEventListener('change', () => this.applySorting());
         this.resetFiltersBtn.addEventListener('click', () => this.resetFilters());
 
-        // Search History
         this.historyBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             this.toggleHistory();
@@ -115,21 +132,35 @@ class MovieSearchPro {
 
         this.clearHistoryBtn.addEventListener('click', () => this.clearHistory());
 
-        // Close history when clicking outside
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-history') && !e.target.closest('.history-dropdown')) {
+            if (!e.target.closest('.search-history')) {
                 this.historyDropdown.classList.add('hidden');
             }
         });
 
-        // Close filters when clicking outside
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.filters-panel') && !e.target.closest('.toggle-filters-btn')) {
+            if (!e.target.closest('.filters-section')) {
                 this.filtersContainer.classList.add('hidden');
             }
         });
 
-        // Load and render history on page load
+        this.prevPage.addEventListener('click', () => {
+            if (this.currentPage > 1) {
+                this.currentPage--;
+                this.displaySearchResults(this.filteredMovies);
+                window.scrollTo(0, 0);
+            }
+        });
+
+        this.nextPage.addEventListener('click', () => {
+            const totalPages = Math.ceil(this.filteredMovies.length / this.ITEMS_PER_PAGE);
+            if (this.currentPage < totalPages) {
+                this.currentPage++;
+                this.displaySearchResults(this.filteredMovies);
+                window.scrollTo(0, 0);
+            }
+        });
+
         this.renderHistory();
     }
 
@@ -148,6 +179,13 @@ class MovieSearchPro {
         this.currentFilters.yearTo = parseInt(this.yearTo.value);
     }
 
+    updateRatingLabels() {
+        this.ratingFromLabel.textContent = parseFloat(this.ratingFrom.value).toFixed(1);
+        this.ratingToLabel.textContent = parseFloat(this.ratingTo.value).toFixed(1);
+        this.currentFilters.ratingFrom = parseFloat(this.ratingFrom.value);
+        this.currentFilters.ratingTo = parseFloat(this.ratingTo.value);
+    }
+
     setTypeFilter(btn) {
         this.typeBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -156,7 +194,8 @@ class MovieSearchPro {
 
     applySorting() {
         this.currentFilters.sort = this.sortFilter.value;
-        if (this.allSearchResults.length > 0) {
+        if (this.allMovies.length > 0) {
+            this.currentPage = 1;
             this.filterAndSortResults();
         }
     }
@@ -166,6 +205,10 @@ class MovieSearchPro {
         this.yearTo.value = 2026;
         this.updateYearLabels();
 
+        this.ratingFrom.value = 0;
+        this.ratingTo.value = 10;
+        this.updateRatingLabels();
+
         this.typeBtns.forEach(btn => btn.classList.remove('active'));
         this.typeBtns[0].classList.add('active');
         this.currentFilters.type = 'all';
@@ -173,7 +216,8 @@ class MovieSearchPro {
         this.sortFilter.value = 'relevance';
         this.currentFilters.sort = 'relevance';
 
-        if (this.allSearchResults.length > 0) {
+        this.currentPage = 1;
+        if (this.allMovies.length > 0) {
             this.filterAndSortResults();
         }
     }
@@ -183,11 +227,6 @@ class MovieSearchPro {
 
         if (!query) {
             this.showError('Please enter a movie name');
-            return;
-        }
-
-        if (!this.API_KEY || this.API_KEY === 'YOUR_API_KEY_HERE') {
-            this.showError('API key is not configured. Please add your OMDB API key to the script.');
             return;
         }
 
@@ -202,7 +241,8 @@ class MovieSearchPro {
             const data = await response.json();
 
             if (data.Response === 'True' && data.Search && data.Search.length > 0) {
-                this.allSearchResults = data.Search;
+                this.allMovies = data.Search;
+                this.currentPage = 1;
 
                 if (data.Search.length === 1) {
                     await this.showMovieDetails(data.Search[0].imdbID);
@@ -223,10 +263,9 @@ class MovieSearchPro {
         }
     }
 
-    filterAndSortResults() {
-        let filtered = this.allSearchResults;
+    async filterAndSortResults() {
+        let filtered = [...this.allMovies];
 
-        // Apply type filter
         if (this.currentFilters.type !== 'all') {
             filtered = filtered.filter(movie => {
                 const type = movie.Type.toLowerCase();
@@ -234,15 +273,34 @@ class MovieSearchPro {
             });
         }
 
-        // Apply year filter
         filtered = filtered.filter(movie => {
             const year = parseInt(movie.Year);
             return year >= this.currentFilters.yearFrom && year <= this.currentFilters.yearTo;
         });
 
-        // Apply sorting
-        filtered = this.sortResults(filtered);
+        if (this.currentFilters.sort === 'rating') {
+            for (let movie of filtered) {
+                if (!movie.imdbRating) {
+                    try {
+                        const response = await fetch(
+                            `${this.OMDB_API_URL}?apikey=${this.API_KEY}&i=${movie.imdbID}`
+                        );
+                        const data = await response.json();
+                        movie.imdbRating = data.imdbRating !== 'N/A' ? parseFloat(data.imdbRating) : 0;
+                    } catch (e) {
+                        movie.imdbRating = 0;
+                    }
+                }
+            }
 
+            filtered = filtered.filter(movie => {
+                const rating = movie.imdbRating || 0;
+                return rating >= this.currentFilters.ratingFrom && rating <= this.currentFilters.ratingTo;
+            });
+        }
+
+        filtered = this.sortResults(filtered);
+        this.filteredMovies = filtered;
         this.displaySearchResults(filtered);
     }
 
@@ -260,12 +318,10 @@ class MovieSearchPro {
                 sorted.sort((a, b) => a.Title.localeCompare(b.Title));
                 break;
             case 'rating':
-                // Note: search results don't include ratings
-                // For now, we'll keep relevance order
+                sorted.sort((a, b) => (b.imdbRating || 0) - (a.imdbRating || 0));
                 break;
             case 'relevance':
             default:
-                // Keep original order from API (search relevance)
                 break;
         }
 
@@ -302,7 +358,6 @@ class MovieSearchPro {
                 this.moviePoster.alt = data.Title;
             } else {
                 this.moviePoster.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="450"%3E%3Crect fill="%23ddd" width="300" height="450"/%3E%3Ctext x="50%" y="50%" font-size="18" fill="%23999" text-anchor="middle" dominant-baseline="middle"%3ENo Poster Available%3C/text%3E%3C/svg%3E';
-                this.moviePoster.alt = 'No Poster Available';
             }
 
             this.hideAllSections();
@@ -317,28 +372,29 @@ class MovieSearchPro {
     }
 
     displaySearchResults(movies) {
+        const totalPages = Math.ceil(movies.length / this.ITEMS_PER_PAGE);
+        const startIndex = (this.currentPage - 1) * this.ITEMS_PER_PAGE;
+        const endIndex = startIndex + this.ITEMS_PER_PAGE;
+        const pageMovies = movies.slice(startIndex, endIndex);
+
         this.resultsList.innerHTML = '';
         this.resultsCount.textContent = `${movies.length} result${movies.length !== 1 ? 's' : ''}`;
 
-        if (movies.length === 0) {
+        if (pageMovies.length === 0) {
             const emptyMsg = document.createElement('div');
             emptyMsg.style.padding = '40px';
             emptyMsg.style.textAlign = 'center';
             emptyMsg.style.color = '#666';
+            emptyMsg.style.gridColumn = '1 / -1';
             emptyMsg.textContent = 'No movies match your filters';
             this.resultsList.appendChild(emptyMsg);
-            return;
         }
 
-        movies.forEach(movie => {
+        pageMovies.forEach(movie => {
             const card = document.createElement('div');
             card.className = 'result-card';
             card.innerHTML = `
-                <img
-                    src="${movie.Poster !== 'N/A' ? movie.Poster : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="250"%3E%3Crect fill="%23ddd" width="200" height="250"/%3E%3Ctext x="50%" y="50%" font-size="14" fill="%23999" text-anchor="middle" dominant-baseline="middle"%3ENo Poster%3C/text%3E%3C/svg%3E'}"
-                    alt="${movie.Title}"
-                    loading="lazy"
-                >
+                <img src="${movie.Poster !== 'N/A' ? movie.Poster : 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="250"%3E%3Crect fill="%23ddd" width="200" height="250"/%3E%3Ctext x="50%" y="50%" font-size="14" fill="%23999" text-anchor="middle" dominant-baseline="middle"%3ENo Poster%3C/text%3E%3C/svg%3E'}" alt="${movie.Title}" loading="lazy">
                 <div class="result-card-info">
                     <div class="result-card-title">${movie.Title}</div>
                     <div class="result-card-year">${movie.Year}</div>
@@ -349,6 +405,15 @@ class MovieSearchPro {
             card.addEventListener('click', () => this.showMovieDetails(movie.imdbID));
             this.resultsList.appendChild(card);
         });
+
+        if (movies.length > this.ITEMS_PER_PAGE) {
+            this.pagination.classList.remove('hidden');
+            this.pageInfo.textContent = `Page ${this.currentPage} of ${totalPages}`;
+            this.prevPage.disabled = this.currentPage === 1;
+            this.nextPage.disabled = this.currentPage === totalPages;
+        } else {
+            this.pagination.classList.add('hidden');
+        }
 
         this.hideAllSections();
         this.searchResults.classList.remove('hidden');
@@ -367,11 +432,7 @@ class MovieSearchPro {
     }
 
     showLoading(show) {
-        if (show) {
-            this.loadingSpinner.classList.remove('hidden');
-        } else {
-            this.loadingSpinner.classList.add('hidden');
-        }
+        this.loadingSpinner.classList.toggle('hidden', !show);
     }
 
     showError(message) {
@@ -384,16 +445,15 @@ class MovieSearchPro {
         this.errorMessage.classList.remove('show');
     }
 
-    // Search History Methods
     saveSearch(query) {
         try {
             let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
             history = history.filter(q => q !== query);
             history.unshift(query);
-            history = history.slice(0, 10); // Keep last 10 searches
+            history = history.slice(0, 10);
             localStorage.setItem('searchHistory', JSON.stringify(history));
         } catch (e) {
-            console.warn('Could not save search to localStorage:', e);
+            console.warn('Could not save search:', e);
         }
     }
 
@@ -401,7 +461,6 @@ class MovieSearchPro {
         try {
             return JSON.parse(localStorage.getItem('searchHistory') || '[]');
         } catch (e) {
-            console.warn('Could not get search history:', e);
             return [];
         }
     }
@@ -425,12 +484,8 @@ class MovieSearchPro {
                     this.historyDropdown.classList.add('hidden');
                     this.search();
                 });
-                li.addEventListener('mouseover', () => {
-                    li.style.backgroundColor = '#f0f0f0';
-                });
-                li.addEventListener('mouseout', () => {
-                    li.style.backgroundColor = 'transparent';
-                });
+                li.addEventListener('mouseover', () => li.style.backgroundColor = '#f0f0f0');
+                li.addEventListener('mouseout', () => li.style.backgroundColor = 'transparent');
                 this.historyList.appendChild(li);
             });
         }
@@ -446,7 +501,6 @@ class MovieSearchPro {
     }
 }
 
-// Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
     new MovieSearchPro();
 });
