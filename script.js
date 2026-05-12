@@ -46,6 +46,7 @@ class MovieSearchPro {
         this.ratingFromLabel = document.getElementById('ratingFromLabel');
         this.ratingToLabel = document.getElementById('ratingToLabel');
         this.typeBtns = document.querySelectorAll('.type-btn');
+        this.genreFilter = document.getElementById('genreFilter');
         this.sortFilter = document.getElementById('sortFilter');
         this.resetFiltersBtn = document.getElementById('resetFiltersBtn');
 
@@ -65,6 +66,7 @@ class MovieSearchPro {
             ratingFrom: 0,
             ratingTo: 10,
             type: 'all',
+            genre: 'all',
             sort: 'relevance'
         };
     }
@@ -80,49 +82,35 @@ class MovieSearchPro {
 
         this.toggleFiltersBtn.addEventListener('click', () => this.toggleFilters());
 
-        this.yearFrom.addEventListener('input', () => {
-            this.updateYearLabels();
-            if (this.allMovies.length > 0) {
-                this.currentPage = 1;
-                this.filterAndSortResults();
-            }
-        });
+        this.yearFrom.addEventListener('input', () => this.updateYearLabels());
+        this.yearFrom.addEventListener('change', () => this.handleFilterChange());
 
-        this.yearTo.addEventListener('input', () => {
-            this.updateYearLabels();
-            if (this.allMovies.length > 0) {
-                this.currentPage = 1;
-                this.filterAndSortResults();
-            }
-        });
+        this.yearTo.addEventListener('input', () => this.updateYearLabels());
+        this.yearTo.addEventListener('change', () => this.handleFilterChange());
 
-        this.ratingFrom.addEventListener('input', () => {
-            this.updateRatingLabels();
-            if (this.allMovies.length > 0) {
-                this.currentPage = 1;
-                this.filterAndSortResults();
-            }
-        });
+        this.ratingFrom.addEventListener('input', () => this.updateRatingLabels());
+        this.ratingFrom.addEventListener('change', () => this.handleFilterChange());
 
-        this.ratingTo.addEventListener('input', () => {
-            this.updateRatingLabels();
-            if (this.allMovies.length > 0) {
-                this.currentPage = 1;
-                this.filterAndSortResults();
-            }
-        });
+        this.ratingTo.addEventListener('input', () => this.updateRatingLabels());
+        this.ratingTo.addEventListener('change', () => this.handleFilterChange());
 
         this.typeBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 this.setTypeFilter(btn);
-                if (this.allMovies.length > 0) {
-                    this.currentPage = 1;
-                    this.filterAndSortResults();
-                }
+                this.handleFilterChange();
             });
         });
 
-        this.sortFilter.addEventListener('change', () => this.applySorting());
+        this.genreFilter.addEventListener('change', () => {
+            this.currentFilters.genre = this.genreFilter.value;
+            this.handleFilterChange();
+        });
+
+        this.sortFilter.addEventListener('change', () => {
+            this.currentFilters.sort = this.sortFilter.value;
+            this.handleFilterChange();
+        });
+
         this.resetFiltersBtn.addEventListener('click', () => this.resetFilters());
 
         this.historyBtn.addEventListener('click', (e) => {
@@ -164,6 +152,15 @@ class MovieSearchPro {
         this.renderHistory();
     }
 
+    handleFilterChange() {
+        if (this.allMovies.length > 0) {
+            this.currentPage = 1;
+            this.filterAndSortResults();
+        } else {
+            this.search();
+        }
+    }
+
     toggleFilters() {
         this.filtersContainer.classList.toggle('hidden');
     }
@@ -194,10 +191,7 @@ class MovieSearchPro {
 
     applySorting() {
         this.currentFilters.sort = this.sortFilter.value;
-        if (this.allMovies.length > 0) {
-            this.currentPage = 1;
-            this.filterAndSortResults();
-        }
+        this.handleFilterChange();
     }
 
     resetFilters() {
@@ -213,6 +207,9 @@ class MovieSearchPro {
         this.typeBtns[0].classList.add('active');
         this.currentFilters.type = 'all';
 
+        this.genreFilter.value = 'all';
+        this.currentFilters.genre = 'all';
+
         this.sortFilter.value = 'relevance';
         this.currentFilters.sort = 'relevance';
 
@@ -224,8 +221,10 @@ class MovieSearchPro {
 
     async search() {
         const inputQuery = this.searchInput.value.trim();
-        // OMDB API requires a search term. If empty, use a broad default term to allow filtering.
-        const apiQuery = inputQuery || "the";
+        // OMDB API requires a search term. If empty, use a broad default term.
+        const defaultTerms = ["star", "love", "the", "day", "night", "man", "world"];
+        const randomTerm = defaultTerms[Math.floor(Math.random() * defaultTerms.length)];
+        const apiQuery = inputQuery || randomTerm;
 
         try {
             this.clearError();
@@ -301,6 +300,15 @@ class MovieSearchPro {
             const rating = movie.imdbRating || 0;
             return rating >= this.currentFilters.ratingFrom && rating <= this.currentFilters.ratingTo;
         });
+
+        // Apply Genre filter
+        if (this.currentFilters.genre !== 'all') {
+            filtered = filtered.filter(movie => {
+                if (!movie.Genre || movie.Genre === 'N/A') return false;
+                const genres = movie.Genre.toLowerCase().split(',').map(g => g.trim());
+                return genres.includes(this.currentFilters.genre);
+            });
+        }
 
         filtered = this.sortResults(filtered);
         this.filteredMovies = filtered;
